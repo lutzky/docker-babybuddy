@@ -3,9 +3,7 @@ FROM ghcr.io/linuxserver/baseimage-alpine:3.14
 # set version label
 ARG BUILD_DATE
 ARG VERSION
-ARG BABYBUDDY_VERSION
-ARG BABYBUDDY_REPO
-LABEL build_version="Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
+LABEL build_version="Linuxserver.io version:- lutzky-git Build-date:- ${BUILD_DATE}"
 LABEL maintainer="aptalca"
 
 RUN \
@@ -13,6 +11,7 @@ RUN \
   apk add --no-cache --virtual=build-dependencies \
     build-base \
     curl \
+    git \
     jpeg-dev \
     libffi-dev \
     postgresql-dev \
@@ -26,20 +25,9 @@ RUN \
     py3-pip \
     python3 && \
   echo "**** install babybuddy ****" && \
-  if [ -z ${BABYBUDDY_REPO+x} ]; then \
-    BABYBUDDY_REPO="babybuddy/babybuddy"; \
-  fi && \
-  if [ -z ${BABYBUDDY_VERSION+x} ]; then \
-    BABYBUDDY_VERSION=$(curl -sX GET "https://api.github.com/repos/${BABYBUDDY_REPO}/releases/latest" \
-      | awk '/tag_name/{print $4;exit}' FS='[""]'); \
-  fi && \
-  curl -o \
-    /tmp/babybuddy.tar.gz -L \
-    "https://github.com/${BABYBUDDY_REPO}/archive/refs/tags/${BABYBUDDY_VERSION}.tar.gz" && \
-  mkdir -p /app/babybuddy && \
-  tar xf \
-    /tmp/babybuddy.tar.gz -C \
-    /app/babybuddy --strip-components=1 && \
+  mkdir -p /app/babybuddy && cd /app/babybuddy && \
+  git clone --depth 1 https://github.com/lutzky/babybuddy . && \
+  rm -rf .git && \
   cd /app/babybuddy && \
   pip3 install -U --no-cache-dir \
     pip && \
